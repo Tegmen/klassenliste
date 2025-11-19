@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Klassenlisten-Verwaltung für Lehrer">
+    <meta name="theme-color" content="#4CAF50">
+    <title>Klassenliste - Lehrer PWA</title>
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Klassenliste</h1>
+            <button id="installBtn" class="install-btn" style="display: none;">App installieren</button>
+        </header>
+
+        <!-- Tab Navigation -->
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="klasse">Klasse</button>
+            <button class="tab-btn" data-tab="liste">Liste</button>
+        </nav>
+
+        <!-- Tab: Klasse -->
+        <div id="klasse-tab" class="tab-content active">
+            <div class="section">
+                <h2>Klassen verwalten</h2>
+
+                <!-- Klassen-Liste -->
+                <div class="class-selector">
+                    <select id="classSelect" class="select-input">
+                        <option value="">-- Klasse auswählen --</option>
+                    </select>
+                    <div class="button-group">
+                        <button id="addClassBtn" class="btn btn-primary">+ Neue Klasse</button>
+                        <button id="renameClassBtn" class="btn btn-secondary" disabled>Umbenennen</button>
+                        <button id="deleteClassBtn" class="btn btn-danger" disabled>Löschen</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Schüler-Verwaltung -->
+            <div id="studentSection" class="section" style="display: none;">
+                <h2>Schüler verwalten: <span id="currentClassName"></span></h2>
+
+                <!-- Schüler hinzufügen -->
+                <div class="add-student-section">
+                    <h3>Schüler hinzufügen</h3>
+
+                    <!-- Einzelner Schüler -->
+                    <div class="input-group">
+                        <input type="text" id="singleStudentInput" placeholder="Name des Schülers" class="text-input">
+                        <button id="addSingleStudentBtn" class="btn btn-primary">+ Hinzufügen</button>
+                    </div>
+
+                    <!-- Mehrere Schüler -->
+                    <div class="multi-input-group">
+                        <label for="multiStudentInput">Mehrere Schüler (ein Name pro Zeile):</label>
+                        <textarea id="multiStudentInput" rows="5" placeholder="Max Mustermann&#10;Anna Schmidt&#10;Leon Weber" class="textarea-input"></textarea>
+                        <button id="addMultiStudentBtn" class="btn btn-primary">Alle hinzufügen</button>
+                    </div>
+                </div>
+
+                <!-- Schüler-Liste -->
+                <div class="students-list-section">
+                    <h3>Schüler in der Klasse (<span id="studentCount">0</span>)</h3>
+                    <ul id="studentsList" class="students-list"></ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Liste -->
+        <div id="liste-tab" class="tab-content">
+            <div class="section">
+                <h2>Liste anzeigen</h2>
+
+                <!-- Klassen-Auswahl für Liste -->
+                <div class="list-selector">
+                    <label for="listClassSelect">Klasse auswählen:</label>
+                    <select id="listClassSelect" class="select-input">
+                        <option value="">-- Klasse auswählen --</option>
+                    </select>
+                </div>
+
+                <!-- Listen-Anzeige -->
+                <div id="listDisplay" style="display: none;">
+                    <h3>Klasse: <span id="listClassName"></span></h3>
+                    <div class="list-container">
+                        <ol id="displayList" class="display-list"></ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal für Klassenname -->
+    <div id="classModal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Neue Klasse erstellen</h3>
+            <input type="text" id="classNameInput" placeholder="Klassenname (z.B. 5a)" class="text-input">
+            <div class="modal-buttons">
+                <button id="saveClassBtn" class="btn btn-primary">Speichern</button>
+                <button id="cancelClassBtn" class="btn btn-secondary">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal für Schüler umbenennen -->
+    <div id="studentModal" class="modal">
+        <div class="modal-content">
+            <h3>Schüler umbenennen</h3>
+            <input type="text" id="studentNameInput" placeholder="Neuer Name" class="text-input">
+            <div class="modal-buttons">
+                <button id="saveStudentBtn" class="btn btn-primary">Speichern</button>
+                <button id="cancelStudentBtn" class="btn btn-secondary">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/storage.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
