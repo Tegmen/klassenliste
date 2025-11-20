@@ -115,17 +115,25 @@ class KlassenlisteApp {
         const classes = Storage.getClasses();
         const classSelect = document.getElementById('classSelect');
         const listClassSelect = document.getElementById('listClassSelect');
+        const checklistClassSelect = document.getElementById('checklistClassSelect');
+        const seatingClassSelect = document.getElementById('seatingClassSelect');
 
         // Clear existing options (except first)
         classSelect.innerHTML = '<option value="">-- Klasse auswählen --</option>';
         listClassSelect.innerHTML = '<option value="">-- Klasse auswählen --</option>';
+        checklistClassSelect.innerHTML = '<option value="">-- Klasse auswählen --</option>';
+        seatingClassSelect.innerHTML = '<option value="">-- Klasse auswählen --</option>';
 
         // Add classes
         Object.keys(classes).sort().forEach(className => {
             const option1 = new Option(className, className);
             const option2 = new Option(className, className);
+            const option3 = new Option(className, className);
+            const option4 = new Option(className, className);
             classSelect.add(option1);
             listClassSelect.add(option2);
+            checklistClassSelect.add(option3);
+            seatingClassSelect.add(option4);
         });
     }
 

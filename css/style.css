@@ -32,35 +32,21 @@ body {
     padding: 1rem;
 }
 
-/* Header */
-header {
+/* Install Button */
+.install-btn {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
     background-color: var(--primary-color);
     color: var(--white);
-    padding: 1.5rem;
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-    box-shadow: var(--shadow-lg);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-header h1 {
-    font-size: 1.8rem;
-    font-weight: 600;
-}
-
-.install-btn {
-    background-color: var(--white);
-    color: var(--primary-color);
     border: none;
     padding: 0.6rem 1.2rem;
     border-radius: 6px;
     cursor: pointer;
     font-weight: 600;
     transition: transform 0.2s;
+    box-shadow: var(--shadow-lg);
+    z-index: 100;
 }
 
 .install-btn:hover {
@@ -395,4 +381,332 @@ header h1 {
     padding: 2rem;
     color: #999;
     font-style: italic;
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+/* Week Selectors */
+.week-selectors {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.week-selectors > div {
+    display: flex;
+    flex-direction: column;
+}
+
+.week-selectors label {
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+}
+
+.date-input {
+    padding: 0.5rem;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.date-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* PDF Render Area (hidden) */
+#pdf-render-area {
+    position: absolute;
+    left: -9999px;
+    top: auto;
+    width: 1123px;
+}
+
+#pdf-content {
+    background: white;
+    padding: 20px;
+}
+
+#pdf-content h2 {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 1em;
+}
+
+#pdf-content table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+    table-layout: fixed;
+}
+
+#pdf-content th,
+#pdf-content td {
+    border: 1px solid #ddd;
+    padding: 2px 8px;
+    text-align: left;
+    position: relative;
+    height: 20px;
+}
+
+#pdf-content td:first-child {
+    display: flex;
+    align-items: center;
+}
+
+#pdf-content td:first-child,
+#pdf-content th:first-child {
+    width: 135px;
+    font-weight: bold;
+}
+
+#pdf-content th.date-header {
+    width: 35px;
+}
+
+#pdf-content thead th.date-header {
+    height: 85px;
+    padding: 0;
+}
+
+#pdf-content thead th.date-header > span {
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    white-space: nowrap;
+}
+
+#pdf-content table.empty-list thead th {
+    height: 60px;
+}
+
+#pdf-content thead th:first-child {
+    background-color: #fff;
+    border: none;
+}
+
+#pdf-content tbody tr:nth-child(odd) {
+    background-color: #e9e9e9;
+}
+
+#pdf-content tbody tr:nth-child(even) {
+    background-color: #ffffff;
+}
+
+#pdf-content .week-separator {
+    border-right: 3px solid #999;
+}
+
+/* Sitzordnung Styles */
+.seating-container {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 2rem;
+    margin-top: 1.5rem;
+}
+
+.seating-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.grid-size-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.number-input {
+    width: 60px;
+    padding: 0.5rem;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+.seating-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.message-area {
+    padding: 0.8rem;
+    border-radius: 6px;
+    font-weight: 500;
+    text-align: center;
+    min-height: 2.5rem;
+}
+
+.seating-student-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.seating-student-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.seating-student-list button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2em;
+    padding: 0.2rem 0.5rem;
+}
+
+.seating-grid-panel {
+    background-color: var(--bg-color);
+    padding: 1rem;
+    border-radius: 8px;
+    overflow: auto;
+}
+
+.classroom-grid {
+    display: grid;
+    gap: 4px;
+    background-color: #fafafa;
+    border: 2px solid var(--secondary-color);
+    padding: 4px;
+    min-height: 400px;
+}
+
+.grid-cell {
+    border: 1px solid #ddd;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    overflow: hidden;
+    position: relative;
+    word-break: break-word;
+    aspect-ratio: 2 / 1;
+    background-color: var(--white);
+}
+
+.grid-cell:hover {
+    background-color: #f0f0f0;
+}
+
+.cell-name {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    line-height: 1.1;
+    box-sizing: border-box;
+    font-size: 50px;
+    transform-origin: center center;
+}
+
+.pin-icon {
+    display: none;
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    font-size: 1.2em;
+    cursor: pointer;
+    opacity: 0.3;
+    transition: opacity 0.2s;
+    z-index: 1;
+}
+
+.grid-cell.desk {
+    background-color: #bdc3c7;
+}
+
+.grid-cell.desk .pin-icon {
+    display: block;
+}
+
+.grid-cell.desk:hover .pin-icon {
+    opacity: 1;
+}
+
+.grid-cell.occupied {
+    background-color: #2ecc71;
+    color: white;
+}
+
+.grid-cell.pinned {
+    background-color: #f1c40f;
+    color: var(--text-color);
+    font-weight: bold;
+}
+
+.grid-cell.locked-empty {
+    background-color: #e0e0e0;
+}
+
+.grid-cell.pinned .pin-icon,
+.grid-cell.locked-empty .pin-icon {
+    opacity: 1;
+}
+
+/* Restriction List */
+.restriction-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.restriction-list label {
+    display: block;
+    padding: 0.5rem;
+    cursor: pointer;
+}
+
+.restriction-list label:hover {
+    background-color: var(--bg-color);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .seating-container {
+        grid-template-columns: 1fr;
+    }
+
+    .container {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    .tabs {
+        flex-wrap: wrap;
+    }
+
+    .tab-btn {
+        flex: 1 1 45%;
+    }
+
+    .week-selectors {
+        grid-template-columns: 1fr;
+    }
 }

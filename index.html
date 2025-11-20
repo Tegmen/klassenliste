@@ -13,18 +13,21 @@
 
     <!-- Stylesheets -->
     <link rel="stylesheet" href="css/style.css">
+
+    <!-- PDF Generation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>📚 Klassenliste</h1>
-            <button id="installBtn" class="install-btn" style="display: none;">App installieren</button>
-        </header>
+        <button id="installBtn" class="install-btn" style="display: none;">App installieren</button>
 
         <!-- Tab Navigation -->
         <nav class="tabs">
             <button class="tab-btn active" data-tab="klasse">Klasse</button>
             <button class="tab-btn" data-tab="liste">Liste</button>
+            <button class="tab-btn" data-tab="checkliste">Checkliste</button>
+            <button class="tab-btn" data-tab="sitzordnung">Sitzordnung</button>
         </nav>
 
         <!-- Tab: Klasse -->
@@ -97,6 +100,113 @@
                 </div>
             </div>
         </div>
+
+        <!-- Tab: Checkliste -->
+        <div id="checkliste-tab" class="tab-content">
+            <div class="section">
+                <h2>Checkliste generieren</h2>
+
+                <!-- Klassen-Auswahl -->
+                <div class="form-group">
+                    <label for="checklistClassSelect">Klasse auswählen:</label>
+                    <select id="checklistClassSelect" class="select-input">
+                        <option value="">-- Klasse auswählen --</option>
+                    </select>
+                </div>
+
+                <!-- Checklisten-Generator (nur sichtbar wenn Klasse gewählt) -->
+                <div id="checklistGenerator" style="display: none;">
+                    <div class="form-group">
+                        <label for="checklistTitle">Titel für die Liste:</label>
+                        <input type="text" id="checklistTitle" class="text-input" value="Versäumnisse">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="checklistType">Art der Liste:</label>
+                        <select id="checklistType" class="select-input">
+                            <option value="wochentage">Mit Wochentagen</option>
+                            <option value="leer">Leere Spalten</option>
+                        </select>
+                    </div>
+
+                    <div id="weekFields" class="form-group">
+                        <label for="lastColumnHeader">Titel für die letzte Spalte:</label>
+                        <input type="text" id="lastColumnHeader" class="text-input" value="Arrest">
+
+                        <label style="margin-top: 1rem;">Wochen auswählen:</label>
+                        <div class="week-selectors">
+                            <div><label>1. Woche</label><input type="date" id="week-1" class="date-input"></div>
+                            <div><label>2. Woche</label><input type="date" id="week-2" class="date-input"></div>
+                            <div><label>3. Woche</label><input type="date" id="week-3" class="date-input"></div>
+                            <div><label>4. Woche</label><input type="date" id="week-4" class="date-input"></div>
+                        </div>
+                    </div>
+
+                    <button id="generateChecklistBtn" class="btn btn-primary">PDF erstellen</button>
+                </div>
+            </div>
+
+            <!-- Hidden PDF Render Area -->
+            <div id="pdf-render-area">
+                <div id="pdf-content"></div>
+            </div>
+        </div>
+
+        <!-- Tab: Sitzordnung -->
+        <div id="sitzordnung-tab" class="tab-content">
+            <div class="section">
+                <h2>Sitzordnung generieren</h2>
+
+                <!-- Klassen-Auswahl -->
+                <div class="form-group">
+                    <label for="seatingClassSelect">Klasse auswählen:</label>
+                    <select id="seatingClassSelect" class="select-input">
+                        <option value="">-- Klasse auswählen --</option>
+                    </select>
+                </div>
+
+                <!-- Sitzordnung-Generator (nur sichtbar wenn Klasse gewählt) -->
+                <div id="seatingGenerator" style="display: none;">
+                    <div class="seating-container">
+                        <!-- Linke Spalte: Einstellungen und Aktionen -->
+                        <div class="seating-controls">
+                            <div class="form-group">
+                                <label for="seatingTitle">Titel:</label>
+                                <input type="text" id="seatingTitle" class="text-input" value="Sitzordnung">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Gittergröße:</label>
+                                <div class="grid-size-controls">
+                                    <label>Spalten: <input type="number" id="gridCols" min="3" max="15" value="7" class="number-input"></label>
+                                    <label>Zeilen: <input type="number" id="gridRows" min="3" max="15" value="7" class="number-input"></label>
+                                    <button id="applyGridBtn" class="btn btn-secondary">Anwenden</button>
+                                </div>
+                            </div>
+
+                            <div class="seating-actions">
+                                <button id="generateSeatingBtn" class="btn btn-primary">Sitzordnung generieren</button>
+                                <button id="clearSeatingBtn" class="btn btn-secondary">Zurücksetzen</button>
+                                <button id="exportSeatingBtn" class="btn btn-primary">PDF Export</button>
+                            </div>
+
+                            <div id="seatingMessage" class="message-area"></div>
+
+                            <!-- Schülerliste mit Einschränkungen -->
+                            <div class="form-group">
+                                <h3>Schüler</h3>
+                                <ul id="seatingStudentList" class="seating-student-list"></ul>
+                            </div>
+                        </div>
+
+                        <!-- Rechte Spalte: Klassenzimmer-Grid -->
+                        <div class="seating-grid-panel">
+                            <div id="classroomGrid" class="classroom-grid"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal für Klassenname -->
@@ -123,8 +233,35 @@
         </div>
     </div>
 
+    <!-- Modal für Sitzeinschränkungen -->
+    <div id="restrictionModal" class="modal">
+        <div class="modal-content">
+            <h3>Wen soll <span id="restrictionStudentName"></span> meiden?</h3>
+            <div id="restrictionList" class="restriction-list"></div>
+            <div class="modal-buttons">
+                <button id="saveRestrictionsBtn" class="btn btn-primary">Speichern</button>
+                <button id="cancelRestrictionsBtn" class="btn btn-secondary">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal für Platz fixieren -->
+    <div id="pinModal" class="modal">
+        <div class="modal-content">
+            <h3>Welcher Schüler soll hier sitzen?</h3>
+            <select id="pinStudentSelect" class="select-input"></select>
+            <div class="modal-buttons">
+                <button id="savePinBtn" class="btn btn-primary">Fixieren</button>
+                <button id="unpinBtn" class="btn btn-danger" style="display: none;">Fixierung aufheben</button>
+                <button id="cancelPinBtn" class="btn btn-secondary">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="js/storage.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/checklist.js"></script>
+    <script src="js/seating.js"></script>
 </body>
 </html>
