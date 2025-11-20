@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sitzplan Generator</title>
+    
+    <!-- PDF Export Bibliotheken -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --background-color: #f4f6f7;
+            --panel-bg-color: #ffffff;
+            --desk-color: #bdc3c7;
+            --desk-occupied-color: #2ecc71;
+            --desk-pinned-color: #f1c40f;
+            --desk-empty-color: #e0e0e0;
+            --text-color: #333;
+            --error-color: #e74c3c;
+            --lock-color: #e67e22;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 40px);
+            box-sizing: border-box;
+        }
+
+        .main-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .main-header h1 {
+            margin: 0;
+            color: var(--secondary-color);
+        }
+
+        .main-header p {
+            margin: 0;
+            color: #7f8c8d;
+        }
+
+        .app-container {
+            display: flex;
+            gap: 20px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .panel {
+            background-color: var(--panel-bg-color);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .students-panel {
+            flex: 1;
+            min-width: 280px;
+        }
+
+        .classroom-panel {
+            flex: 3;
+            min-width: 0;
+        }
+
+        h2 {
+            color: var(--secondary-color);
+            margin: 0 0 15px 0;
+            font-size: 1.2em;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--background-color);
+        }
+        
+        #classroom-title-input {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: var(--secondary-color);
+            border: none;
+            width: 100%;
+            padding: 0;
+        }
+        #classroom-title-input:focus {
+            outline: none;
+        }
+
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            border-bottom: 2px solid var(--background-color);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        
+        #edit-grid-btn {
+            background: none; border: none; font-size: 1.5em; cursor: pointer; padding: 0 5px;
+        }
+
+        #grid-controls {
+            display: flex; gap: 15px; margin-bottom: 15px; align-items: center;
+        }
+        #grid-controls input { width: 50px; padding: 5px; }
+        #grid-controls button {
+            padding: 5px 10px; border: none; background-color: var(--primary-color);
+            color: white; border-radius: 4px; cursor: pointer;
+        }
+
+        .input-group { display: flex; margin-bottom: 10px; }
+        #student-name-input {
+            flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px 0 0 4px;
+        }
+        #add-student-btn {
+            padding: 10px 15px; border: none; background-color: var(--primary-color);
+            color: white; cursor: pointer; border-radius: 0 4px 4px 0; transition: background-color 0.2s;
+        }
+        #add-student-btn:hover { background-color: #2980b9; }
+        
+        .student-actions-header {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .student-actions-header button {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            cursor: pointer;
+        }
+
+        #import-area { margin-top: 10px; margin-bottom: 20px; }
+        #import-textarea { width: 100%; box-sizing: border-box; min-height: 100px; }
+        #save-import-btn { width: 100%; margin-top: 5px; padding: 8px; background-color: var(--primary-color); color: white; border: none; border-radius: 4px; }
+
+        .main-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--background-color);
+        }
+        .main-actions button {
+            flex: 1;
+            padding: 12px 10px;
+            border: none;
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 1em;
+            transition: background-color 0.2s;
+        }
+        .main-actions button:hover {
+            background-color: #2980b9;
+        }
+        #message-area { 
+            width: 100%;
+            margin-top: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+
+        #student-list { 
+            list-style: none; padding: 0; margin: 0; overflow-y: auto; 
+            flex: 1; /* This makes the list take up remaining space and scroll */
+        }
+        #student-list li {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px; border-bottom: 1px solid var(--background-color);
+        }
+        .student-actions button {
+            background: none; border: none; cursor: pointer; font-size: 1.2em; margin-left: 8px;
+        }
+        .remove-student-btn { color: var(--error-color); }
+        .lock-student-btn { color: var(--lock-color); }
+
+        .grid-container {
+            display: grid;
+            width: 100%;
+            border: 2px solid var(--secondary-color);
+            background-color: #fafafa;
+            box-sizing: border-box;
+        }
+
+        .grid-cell {
+            border: 1px solid #ddd;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            overflow: hidden;
+            position: relative;
+            word-break: break-word;
+            aspect-ratio: 2 / 1;
+        }
+        
+        .cell-name {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            line-height: 1.1;
+            box-sizing: border-box;
+            font-size: 50px; /* Large base size to be scaled down */
+            transform-origin: center center;
+        }
+
+        .pin-icon {
+            display: none; /* Hide by default */
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            font-size: 1.2em;
+            cursor: pointer;
+            opacity: 0.3;
+            transition: opacity 0.2s;
+            z-index: 1; /* Ensure icon is clickable */
+        }
+        .grid-cell.desk .pin-icon {
+            display: block; /* Show only on desks */
+        }
+        .grid-cell.desk:hover .pin-icon { opacity: 1; }
+
+        .grid-cell.desk { background-color: var(--desk-color); }
+        .grid-cell.occupied { background-color: var(--desk-occupied-color); color: white; }
+        .grid-cell.pinned { background-color: var(--desk-pinned-color); color: var(--secondary-color); font-weight: bold; }
+        .grid-cell.locked-empty { background-color: var(--desk-empty-color); }
+        .grid-cell.pinned .pin-icon, .grid-cell.locked-empty .pin-icon { opacity: 1; }
+
+        .hidden { display: none !important; }
+
+        /* Modal Styles */
+        .modal-backdrop {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5); display: flex;
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background: white; padding: 25px; border-radius: 8px;
+            min-width: 300px; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .modal-content h3 { margin-top: 0; }
+        .modal-list {
+            max-height: 200px; overflow-y: auto; border: 1px solid #ccc;
+            padding: 10px; margin: 15px 0;
+        }
+        .modal-list label { display: block; padding: 5px; cursor: pointer; }
+        .modal-buttons {
+            display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;
+        }
+        .modal-buttons button {
+            padding: 8px 15px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer;
+        }
+        #save-restrictions-btn, #save-pin-btn {
+            background-color: var(--primary-color); color: white; border-color: var(--primary-color);
+        }
+        #unpin-btn {
+            background-color: var(--error-color); color: white; border-color: var(--error-color);
+        }
+
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <h1>Sitzplan Generator</h1>
+        <p>Martin Brändli 2025</p>
+    </header>
+
+    <div class="app-container">
+        <!-- Linke Spalte: Schülerverwaltung -->
+        <div class="panel students-panel">
+            <h2>SchülerInnen</h2>
+            <div class="input-group">
+                <input type="text" id="student-name-input" placeholder="Name SchülerIn">
+                <button id="add-student-btn">Hinzufügen</button>
+            </div>
+            <div class="student-actions-header">
+                <button id="import-btn">Importieren</button>
+            </div>
+            <div id="import-area" class="hidden">
+                <textarea id="import-textarea" placeholder="Eine SchülerIn pro Zeile..."></textarea>
+                <button id="save-import-btn">Import speichern</button>
+            </div>
+            <div class="main-actions">
+                <button id="generate-btn">Sitzordnung generieren</button>
+                <button id="pdf-export-btn">PDF Export</button>
+                <p id="message-area"></p>
+            </div>
+            <ul id="student-list"></ul>
+        </div>
+
+        <!-- Rechte Spalte: Klassenzimmer-Gitter -->
+        <div class="panel classroom-panel">
+            <div class="panel-header">
+                <input type="text" id="classroom-title-input" value="Sitzordnung 3g">
+                <button id="edit-grid-btn" title="Gittergrösse ändern">✏️</button>
+            </div>
+            <div id="grid-controls" class="hidden">
+                <label>Spalten: <input type="number" id="grid-cols-input" min="3" max="25"></label>
+                <label>Zeilen: <input type="number" id="grid-rows-input" min="3" max="25"></label>
+                <button id="save-grid-btn">Anwenden</button>
+            </div>
+            <div id="classroom-grid" class="grid-container"></div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="restriction-modal" class="modal-backdrop hidden">
+        <div class="modal-content">
+            <h3>Wen soll <span id="restriction-student-name"></span> meiden?</h3>
+            <div id="restriction-list" class="modal-list"></div>
+            <div class="modal-buttons">
+                <button id="save-restrictions-btn">Speichern</button>
+                <button id="cancel-restrictions-btn">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="pin-modal" class="modal-backdrop hidden">
+        <div class="modal-content">
+            <h3>Welche SchülerIn soll hier sitzen?</h3>
+            <select id="pin-student-select"></select>
+            <div class="modal-buttons">
+                <button id="save-pin-btn">Fixieren</button>
+                <button id="unpin-btn" class="hidden">Fixierung aufheben</button>
+                <button id="cancel-pin-btn">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DOM-ELEMENTE ---
+        const studentNameInput = document.getElementById('student-name-input');
+        const addStudentBtn = document.getElementById('add-student-btn');
+        const studentList = document.getElementById('student-list');
+        const gridContainer = document.getElementById('classroom-grid');
+        const generateBtn = document.getElementById('generate-btn');
+        const messageArea = document.getElementById('message-area');
+        const editGridBtn = document.getElementById('edit-grid-btn');
+        const gridControls = document.getElementById('grid-controls');
+        const gridColsInput = document.getElementById('grid-cols-input');
+        const gridRowsInput = document.getElementById('grid-rows-input');
+        const saveGridBtn = document.getElementById('save-grid-btn');
+        const importBtn = document.getElementById('import-btn');
+        const importArea = document.getElementById('import-area');
+        const importTextarea = document.getElementById('import-textarea');
+        const saveImportBtn = document.getElementById('save-import-btn');
+        const pdfExportBtn = document.getElementById('pdf-export-btn');
+        const classroomTitleInput = document.getElementById('classroom-title-input');
+
+        // Modals
+        const restrictionModal = document.getElementById('restriction-modal');
+        const pinModal = document.getElementById('pin-modal');
+
+        // --- GLOBALE VARIABLEN ---
+        let appState = {
+            students: [],
+            classroomTitle: "Sitzordnung 3g",
+            grid: { cols: 7, rows: 7, desks: [], arrangement: [] }
+        };
+        
+        let currentStudentForRestriction = null;
+        let currentCellForPin = null;
+
+        // --- LOKALE SPEICHERUNG ---
+        const saveState = () => {
+            appState.classroomTitle = classroomTitleInput.value;
+            appState.grid.arrangement = [];
+            document.querySelectorAll('.grid-cell.occupied, .grid-cell.pinned').forEach(cell => {
+                const studentId = parseFloat(cell.dataset.studentId);
+                if (studentId) {
+                    appState.grid.arrangement.push({
+                        studentId: studentId,
+                        cellIndex: parseInt(cell.dataset.index)
+                    });
+                }
+            });
+            localStorage.setItem('seatingChartState', JSON.stringify(appState));
+        };
+
+        const loadState = () => {
+            const savedState = localStorage.getItem('seatingChartState');
+            if (savedState) {
+                appState = JSON.parse(savedState);
+            } else {
+                loadDefaultStudents();
+            }
+            classroomTitleInput.value = appState.classroomTitle || "Sitzordnung 3g";
+            gridColsInput.value = appState.grid.cols;
+            gridRowsInput.value = appState.grid.rows;
+            createGrid(); 
+            renderStudents(); 
+            restoreArrangement();
+        };
+
+        const loadDefaultStudents = () => {
+            const defaultNames = ["Amelia", "Benjamin", "Charlotte", "David", "Emma", "Finn", "Greta", "Henry"];
+            defaultNames.forEach(name => addStudent(name));
+        };
+
+        const restoreArrangement = () => {
+            if (!appState.grid.arrangement) return;
+            appState.grid.arrangement.forEach(item => {
+                const student = appState.students.find(s => s.id === item.studentId);
+                const cell = gridContainer.querySelector(`.grid-cell[data-index='${item.cellIndex}']`);
+                if(student && cell) {
+                    cell.dataset.studentId = student.id;
+                    const nameSpan = cell.querySelector('.cell-name');
+                    if (nameSpan) nameSpan.textContent = student.name;
+                    cell.classList.add('occupied');
+                    if (cell.classList.contains('pinned')) cell.classList.add('pinned');
+                }
+            });
+            updateAllFontSizes();
+        };
+
+        // === Schülerverwaltung ===
+        const renderStudents = () => {
+            studentList.innerHTML = '';
+            appState.students.sort((a, b) => a.name.localeCompare(b.name));
+            appState.students.forEach(student => {
+                const li = document.createElement('li');
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = student.name;
+                li.appendChild(nameSpan);
+
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'student-actions';
+
+                const lockBtn = document.createElement('button');
+                lockBtn.textContent = '🔒';
+                lockBtn.title = 'Sitz-Einschränkungen festlegen';
+                lockBtn.className = 'lock-student-btn';
+                lockBtn.onclick = () => openRestrictionModal(student.id);
+                actionsDiv.appendChild(lockBtn);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.textContent = '✖';
+                removeBtn.title = 'SchülerIn entfernen';
+                removeBtn.className = 'remove-student-btn';
+                removeBtn.onclick = () => removeStudent(student.id);
+                actionsDiv.appendChild(removeBtn);
+
+                li.appendChild(actionsDiv);
+                studentList.appendChild(li);
+            });
+        };
+
+        const addStudent = (name) => {
+            const trimmedName = name.trim();
+            if (trimmedName && !appState.students.some(s => s.name.toLowerCase() === trimmedName.toLowerCase())) {
+                const newStudent = { id: Date.now() + Math.random(), name: trimmedName, restrictions: [] };
+                appState.students.push(newStudent);
+                return true;
+            }
+            return false;
+        };
+
+        const handleAddStudentClick = () => {
+            if (addStudent(studentNameInput.value)) {
+                studentNameInput.value = '';
+                renderStudents();
+                saveState();
+            }
+        };
+
+        const removeStudent = (idToRemove) => {
+            appState.students = appState.students.filter(s => s.id !== idToRemove);
+            appState.students.forEach(s => { s.restrictions = s.restrictions.filter(resId => resId !== idToRemove); });
+            const deskIndex = appState.grid.desks.findIndex(d => d.pinnedStudentId === idToRemove);
+            if (deskIndex !== -1) delete appState.grid.desks[deskIndex].pinnedStudentId;
+            renderStudents();
+            createGrid(); 
+            saveState();
+        };
+        
+        const handleImport = () => {
+            const namesToImport = importTextarea.value.split('\n')
+                .map(name => name.trim())
+                .filter(name => name.length > 0);
+            
+            const uniqueNewNames = [...new Set(namesToImport)];
+            let importCount = 0;
+            uniqueNewNames.forEach(name => {
+                if(addStudent(name)) {
+                    importCount++;
+                }
+            });
+            
+            if(importCount > 0) {
+                renderStudents();
+                saveState();
+            }
+            
+            importTextarea.value = '';
+            importArea.classList.add('hidden');
+            alert(`${importCount} SchülerInnen importiert.`);
+        };
+
+
+        // === Gitter-Verwaltung ===
+        const createGrid = () => {
+            gridContainer.innerHTML = '';
+            gridContainer.style.gridTemplateColumns = `repeat(${appState.grid.cols}, 1fr)`;
+            gridContainer.style.gridTemplateRows = `repeat(${appState.grid.rows}, auto)`;
+
+            for (let i = 0; i < appState.grid.cols * appState.grid.rows; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('grid-cell');
+                cell.dataset.index = i;
+                
+                const nameSpan = document.createElement('div');
+                nameSpan.className = 'cell-name';
+                cell.appendChild(nameSpan);
+
+                const pinIcon = document.createElement('div');
+                pinIcon.className = 'pin-icon';
+                pinIcon.textContent = '📌';
+                pinIcon.title = 'SchülerIn fixieren / Pult sperren';
+                pinIcon.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (cell.classList.contains('desk')) openPinModal(cell);
+                });
+                cell.appendChild(pinIcon);
+
+                const deskInfo = appState.grid.desks.find(d => d.index === i);
+                if (deskInfo) {
+                    cell.classList.add('desk');
+                    if (deskInfo.pinnedStudentId) {
+                        const student = appState.students.find(s => s.id === deskInfo.pinnedStudentId);
+                        if (student) {
+                            cell.classList.add('pinned');
+                            cell.dataset.studentId = student.id;
+                            nameSpan.textContent = student.name;
+                        }
+                    } else if (deskInfo.isLockedEmpty) {
+                        cell.classList.add('locked-empty');
+                        nameSpan.textContent = 'X';
+                    }
+                }
+
+                cell.addEventListener('click', (e) => {
+                    cell.classList.toggle('desk');
+                    updateDeskState(i, cell.classList.contains('desk'));
+                    if (!cell.classList.contains('desk')) {
+                         cell.classList.remove('pinned', 'occupied', 'locked-empty');
+                         nameSpan.textContent = '';
+                         delete cell.dataset.studentId;
+                    }
+                    clearAssignments(false);
+                    saveState();
+                });
+                gridContainer.appendChild(cell);
+            }
+            updateAllFontSizes();
+        };
+        
+        const updateDeskState = (index, isDesk) => {
+            const deskExists = appState.grid.desks.some(d => d.index === index);
+            if (isDesk && !deskExists) appState.grid.desks.push({ index: index });
+            else if (!isDesk && deskExists) appState.grid.desks = appState.grid.desks.filter(d => d.index !== index);
+        };
+        
+        const saveGridSettings = () => {
+            const cols = parseInt(gridColsInput.value);
+            const rows = parseInt(gridRowsInput.value);
+            if(cols >= 3 && rows >= 3) {
+                appState.grid.cols = cols;
+                appState.grid.rows = rows;
+                appState.grid.desks = []; 
+                appState.grid.arrangement = [];
+                createGrid();
+                saveState();
+                gridControls.classList.add('hidden');
+            }
+        };
+
+        const clearAssignments = (clearPinned = true) => {
+            document.querySelectorAll('.grid-cell.occupied').forEach(cell => {
+                 if (!cell.classList.contains('pinned') && !cell.classList.contains('locked-empty')) {
+                     cell.classList.remove('occupied');
+                     const nameSpan = cell.querySelector('.cell-name');
+                     nameSpan.textContent = '';
+                     nameSpan.style.transform = 'scale(1)';
+                     delete cell.dataset.studentId;
+                 }
+            });
+            if (clearPinned) {
+                 document.querySelectorAll('.grid-cell.pinned, .grid-cell.locked-empty').forEach(cell => {
+                     cell.classList.remove('pinned', 'occupied', 'locked-empty');
+                     const nameSpan = cell.querySelector('.cell-name');
+                     nameSpan.textContent = '';
+                     nameSpan.style.transform = 'scale(1)';
+                     delete cell.dataset.studentId;
+                     const deskInfo = appState.grid.desks.find(d => d.index === parseInt(cell.dataset.index));
+                     if (deskInfo) {
+                        delete deskInfo.pinnedStudentId;
+                        delete deskInfo.isLockedEmpty;
+                     }
+                 });
+            }
+            messageArea.textContent = '';
+        };
+        
+        const updateAllFontSizes = () => {
+            document.querySelectorAll('.grid-cell').forEach(cell => {
+                const nameSpan = cell.querySelector('.cell-name');
+                if (!nameSpan || !nameSpan.textContent) {
+                    if (nameSpan) nameSpan.style.transform = 'scale(1)';
+                    return;
+                }
+
+                nameSpan.style.transform = 'scale(1)';
+
+                const availableWidth = cell.clientWidth * 0.9;
+                const availableHeight = cell.clientHeight * 0.9;
+
+                const contentWidth = nameSpan.scrollWidth;
+                const contentHeight = nameSpan.scrollHeight;
+
+                if (contentWidth === 0 || contentHeight === 0) return;
+                
+                const scale = Math.min(availableWidth / contentWidth, availableHeight / contentHeight);
+                
+                nameSpan.style.transform = `scale(${scale})`;
+            });
+        };
+
+        // === Modal-Logik ===
+        const openRestrictionModal = (studentId) => {
+            currentStudentForRestriction = appState.students.find(s => s.id === studentId);
+            document.getElementById('restriction-student-name').textContent = currentStudentForRestriction.name;
+            const listDiv = document.getElementById('restriction-list');
+            listDiv.innerHTML = '';
+            appState.students.filter(s => s.id !== studentId).forEach(otherStudent => {
+                const label = document.createElement('label');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = otherStudent.id;
+                checkbox.checked = currentStudentForRestriction.restrictions.includes(otherStudent.id);
+                label.appendChild(checkbox);
+                label.append(` ${otherStudent.name}`);
+                listDiv.appendChild(label);
+            });
+            restrictionModal.classList.remove('hidden');
+        };
+
+        const saveRestrictions = () => {
+            const studentA = currentStudentForRestriction;
+            const newRestrictionIds = Array.from(document.querySelectorAll('#restriction-list input:checked')).map(cb => parseFloat(cb.value));
+            
+            studentA.restrictions = newRestrictionIds;
+            const allOtherStudentIds = appState.students.filter(s => s.id !== studentA.id).map(s => s.id);
+            
+            allOtherStudentIds.forEach(studentB_id => {
+                const studentB = appState.students.find(s => s.id === studentB_id);
+                if (newRestrictionIds.includes(studentB_id) && !studentB.restrictions.includes(studentA.id)) {
+                    studentB.restrictions.push(studentA.id);
+                }
+                if (!newRestrictionIds.includes(studentB_id) && studentB.restrictions.includes(studentA.id)) {
+                    studentB.restrictions = studentB.restrictions.filter(id => id !== studentA.id);
+                }
+            });
+            
+            restrictionModal.classList.add('hidden');
+            saveState();
+        };
+
+        const openPinModal = (cell) => {
+            currentCellForPin = cell;
+            const select = document.getElementById('pin-student-select');
+            const unpinBtn = document.getElementById('unpin-btn');
+            select.innerHTML = ''; // Clear options
+            
+            // Add special options first
+            select.innerHTML += '<option value="">-- Zufällig zuweisen --</option>';
+            select.innerHTML += '<option value="empty">-- Pult leer lassen --</option>';
+
+            const cellIndex = parseInt(cell.dataset.index);
+            const deskInfo = appState.grid.desks.find(d => d.index === cellIndex);
+            
+            const pinnedStudentIds = appState.grid.desks.map(d => d.pinnedStudentId).filter(id => id);
+
+            appState.students.forEach(s => {
+                if (!pinnedStudentIds.includes(s.id) || (deskInfo && deskInfo.pinnedStudentId === s.id)) {
+                    const option = document.createElement('option');
+                    option.value = s.id;
+                    option.textContent = s.name;
+                    select.appendChild(option);
+                }
+            });
+
+            if (deskInfo && (deskInfo.pinnedStudentId || deskInfo.isLockedEmpty)) {
+                unpinBtn.classList.remove('hidden');
+                if (deskInfo.isLockedEmpty) {
+                    select.value = 'empty';
+                } else {
+                    select.value = deskInfo.pinnedStudentId || '';
+                }
+            } else {
+                unpinBtn.classList.add('hidden');
+                select.value = '';
+            }
+            
+            pinModal.classList.remove('hidden');
+        };
+
+        const savePin = () => {
+            // Before applying a new pin, clear all random assignments to avoid conflicts.
+            clearAssignments(false);
+
+            const selectedValue = document.getElementById('pin-student-select').value;
+            const cellIndex = parseInt(currentCellForPin.dataset.index);
+            
+            const currentDesk = appState.grid.desks.find(d => d.index === cellIndex);
+            if (!currentDesk) return;
+
+            // Clear previous pinning on other desks if this student was pinned elsewhere
+            if (selectedValue && selectedValue !== 'empty') {
+                const studentId = parseFloat(selectedValue);
+                appState.grid.desks.forEach(desk => {
+                    if (desk.pinnedStudentId === studentId && desk.index !== cellIndex) {
+                        delete desk.pinnedStudentId;
+                    }
+                });
+            }
+            
+            // Reset current desk's special states
+            delete currentDesk.pinnedStudentId;
+            delete currentDesk.isLockedEmpty;
+
+            if (selectedValue === 'empty') {
+                currentDesk.isLockedEmpty = true;
+            } else if (selectedValue) {
+                currentDesk.pinnedStudentId = parseFloat(selectedValue);
+            }
+
+            pinModal.classList.add('hidden');
+            createGrid(); 
+            restoreArrangement();
+            saveState();
+        };
+
+        const unpinDesk = () => {
+            if (!currentCellForPin) return;
+            const cellIndex = parseInt(currentCellForPin.dataset.index);
+            const deskInfo = appState.grid.desks.find(d => d.index === cellIndex);
+            if (deskInfo) {
+                delete deskInfo.pinnedStudentId;
+                delete deskInfo.isLockedEmpty;
+            }
+            pinModal.classList.add('hidden');
+            createGrid();
+            restoreArrangement();
+            saveState();
+        };
+
+        // === GENERIERUNGS-LOGIK ===
+        const generateSeatingChart = () => {
+            clearAssignments(false);
+            const allDeskIndexes = appState.grid.desks.map(d => d.index);
+            const pinnedOrLockedDesks = appState.grid.desks.filter(d => d.pinnedStudentId || d.isLockedEmpty);
+            const pinnedStudentIds = pinnedOrLockedDesks.map(d => d.pinnedStudentId).filter(id => id);
+            
+            const availableDeskIndexes = allDeskIndexes.filter(index => !pinnedOrLockedDesks.some(d => d.index === index));
+            const unassignedStudents = appState.students.filter(s => !pinnedStudentIds.includes(s.id));
+
+            if (unassignedStudents.length > availableDeskIndexes.length) {
+                messageArea.textContent = `Fehler: ${unassignedStudents.length} freie SchülerInnen, aber nur ${availableDeskIndexes.length} freie Pulte.`;
+                messageArea.style.color = 'var(--error-color)';
+                return;
+            }
+            
+            const shuffledStudents = [...unassignedStudents].sort(() => Math.random() - 0.5);
+            const shuffledDesks = [...availableDeskIndexes].map(index => gridContainer.children[index]).sort(() => Math.random() - 0.5);
+
+            const solution = solve(shuffledStudents, shuffledDesks);
+
+            if (solution) {
+                solution.forEach(assignment => {
+                    const { student, desk } = assignment;
+                    desk.classList.add('occupied');
+                    desk.querySelector('.cell-name').textContent = student.name;
+                    desk.dataset.studentId = student.id;
+                });
+                messageArea.textContent = 'Sitzordnung erfolgreich generiert!';
+                messageArea.style.color = 'var(--desk-occupied-color)';
+            } else {
+                messageArea.textContent = 'Keine gültige Sitzordnung mit diesen Einschränkungen gefunden!';
+                messageArea.style.color = 'var(--error-color)';
+            }
+            updateAllFontSizes();
+            saveState(); 
+        };
+
+        const solve = (studentsToPlace, desksToFill) => {
+            const assignments = [];
+            function findSolution(studentIndex) {
+                if (studentIndex >= studentsToPlace.length) return true;
+                const student = studentsToPlace[studentIndex];
+                for (let i = 0; i < desksToFill.length; i++) {
+                    const desk = desksToFill[i];
+                    if (assignments.some(a => a.desk === desk)) continue;
+                    if (isValidPlacement(student, desk, assignments)) {
+                        assignments.push({ student, desk });
+                        if (findSolution(studentIndex + 1)) return true;
+                        assignments.pop(); 
+                    }
+                }
+                return false;
+            }
+            if (findSolution(0)) return assignments;
+            return null;
+        };
+        
+        const isValidPlacement = (student, desk, currentAssignments) => {
+            const deskIndex = parseInt(desk.dataset.index);
+            const { cols, rows } = appState.grid;
+            
+            const neighborIndices = [];
+            if (deskIndex % cols !== 0) neighborIndices.push(deskIndex - 1); 
+            if (deskIndex % cols !== cols - 1) neighborIndices.push(deskIndex + 1);
+            if (deskIndex >= cols) neighborIndices.push(deskIndex - cols); 
+            if (deskIndex < (rows-1) * cols) neighborIndices.push(deskIndex + cols); 
+
+            for (const neighborIndex of neighborIndices) {
+                const neighborCell = gridContainer.children[neighborIndex];
+                if (!neighborCell) continue;
+                
+                const pinnedDeskInfo = appState.grid.desks.find(d => d.index === neighborIndex && d.pinnedStudentId);
+                if (pinnedDeskInfo) {
+                    if (student.restrictions.includes(pinnedDeskInfo.pinnedStudentId)) return false;
+                }
+                const assignedNeighbor = currentAssignments.find(a => parseInt(a.desk.dataset.index) === neighborIndex);
+                if (assignedNeighbor) {
+                    if (student.restrictions.includes(assignedNeighbor.student.id)) return false;
+                }
+            }
+            return true;
+        };
+        
+        // === PDF EXPORT ===
+        const exportToPDF = () => {
+            const { jsPDF } = window.jspdf;
+            const gridElement = document.getElementById('classroom-grid');
+            
+            html2canvas(gridElement, {
+                scale: 3,
+                useCORS: true,
+                onclone: (document) => {
+                    const clonedGrid = document.getElementById('classroom-grid');
+                    clonedGrid.querySelectorAll('.grid-cell').forEach(cell => {
+                        cell.style.color = 'black';
+                        if(cell.classList.contains('desk')) {
+                            cell.style.backgroundColor = '#cccccc';
+                        }
+                        if(cell.classList.contains('locked-empty')) {
+                            cell.querySelector('.cell-name').textContent = 'X';
+                        }
+                        const pin = cell.querySelector('.pin-icon');
+                        if(pin) pin.style.display = 'none';
+                    });
+                }
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                const margin = 10;
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                const usableWidth = pdfWidth - (margin * 2);
+                const usableHeight = pdfHeight - (margin * 2);
+
+                const title = classroomTitleInput.value;
+                const date = new Date().toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+                pdf.setFontSize(16);
+                pdf.text(title, margin, margin + 2);
+                pdf.setFontSize(10);
+                pdf.text(date, pdfWidth - margin, margin + 2, { align: 'right' });
+
+                const canvasWidth = canvas.width;
+                const canvasHeight = canvas.height;
+                const canvasAspectRatio = canvasWidth / canvasHeight;
+                
+                const imageStartY = margin + 10;
+                const imageUsableHeight = pdfHeight - imageStartY - margin;
+
+                let finalWidth, finalHeight;
+                const imageUsableAspectRatio = usableWidth / imageUsableHeight;
+
+                if (canvasAspectRatio > imageUsableAspectRatio) {
+                    finalWidth = usableWidth;
+                    finalHeight = usableWidth / canvasAspectRatio;
+                } else {
+                    finalHeight = imageUsableHeight;
+                    finalWidth = imageUsableHeight * canvasAspectRatio;
+                }
+                
+                const x = margin + (usableWidth - finalWidth) / 2;
+                const y = imageStartY + (imageUsableHeight - finalHeight) / 2;
+
+                pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
+                pdf.save(`${title.replace(/ /g, '_')}.pdf`);
+            });
+        };
+
+
+        // --- EVENT LISTENERS ---
+        addStudentBtn.addEventListener('click', handleAddStudentClick);
+        studentNameInput.addEventListener('keypress', (e) => e.key === 'Enter' && handleAddStudentClick());
+        generateBtn.addEventListener('click', generateSeatingChart);
+        editGridBtn.addEventListener('click', () => gridControls.classList.toggle('hidden'));
+        saveGridBtn.addEventListener('click', saveGridSettings);
+        importBtn.addEventListener('click', () => importArea.classList.toggle('hidden'));
+        saveImportBtn.addEventListener('click', handleImport);
+        pdfExportBtn.addEventListener('click', exportToPDF);
+        classroomTitleInput.addEventListener('change', saveState);
+
+        // Modals
+        document.getElementById('save-restrictions-btn').addEventListener('click', saveRestrictions);
+        document.getElementById('cancel-restrictions-btn').addEventListener('click', () => restrictionModal.classList.add('hidden'));
+        document.getElementById('save-pin-btn').addEventListener('click', savePin);
+        document.getElementById('unpin-btn').addEventListener('click', unpinDesk);
+        document.getElementById('cancel-pin-btn').addEventListener('click', () => pinModal.classList.add('hidden'));
+        
+        // Responsive font-size on window resize
+        new ResizeObserver(updateAllFontSizes).observe(gridContainer);
+
+
+        // --- INITIALISIERUNG ---
+        loadState();
+    });
+    </script>
+</body>
+</html>
