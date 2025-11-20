@@ -23,27 +23,28 @@ const Storage = {
                 'demo': {
                     name: 'demo',
                     students: [
-                        'Max Mustermann',
-                        'Anna Schmidt',
-                        'Leon Weber',
-                        'Emma Müller',
-                        'Lukas Fischer',
-                        'Mia Wagner',
-                        'Jonas Becker',
-                        'Sophie Schulz',
-                        'Felix Hoffmann',
-                        'Lena Koch',
-                        'Paul Richter',
-                        'Laura Klein',
-                        'Noah Zimmermann',
-                        'Hannah Braun',
-                        'Ben Krüger',
-                        'Lea Schmitt',
-                        'Tim Hartmann',
-                        'Sarah Lange',
-                        'Jan Werner',
-                        'Marie Peters'
-                    ]
+                        'Max M',
+                        'Anna S',
+                        'Leon W',
+                        'Emma Mü',
+                        'Lukas F',
+                        'Mia W',
+                        'Jonas B',
+                        'Sophie S',
+                        'Felix H',
+                        'Lena K',
+                        'Paul R',
+                        'Laura Kl',
+                        'Noah Z',
+                        'Hannah B',
+                        'Ben Kr',
+                        'Lea S',
+                        'Tim H',
+                        'Sarah L',
+                        'Jan W',
+                        'Marie P'
+                    ],
+                    restrictions: {}
                 }
             }
         };
@@ -102,7 +103,8 @@ const Storage = {
 
         data.classes[className] = {
             name: className,
-            students: []
+            students: [],
+            restrictions: {}
         };
 
         this.setData(data);
@@ -157,11 +159,19 @@ const Storage = {
             return { success: false, message: 'Klasse nicht gefunden' };
         }
 
-        if (data.classes[className].students.includes(studentName)) {
+        // Validate student name
+        const validation = this.validateStudentName(studentName);
+        if (!validation.valid) {
+            return { success: false, message: validation.message };
+        }
+
+        const validName = validation.name;
+
+        if (data.classes[className].students.includes(validName)) {
             return { success: false, message: 'Schüler existiert bereits' };
         }
 
-        data.classes[className].students.push(studentName);
+        data.classes[className].students.push(validName);
         this.setData(data);
         return { success: true, message: 'Schüler hinzugefügt' };
     },
@@ -180,11 +190,16 @@ const Storage = {
         let skipped = 0;
 
         studentNames.forEach(name => {
-            const trimmedName = name.trim();
-            if (trimmedName && !data.classes[className].students.includes(trimmedName)) {
-                data.classes[className].students.push(trimmedName);
-                added++;
-            } else if (trimmedName) {
+            const validation = this.validateStudentName(name);
+            if (validation.valid) {
+                const validName = validation.name;
+                if (!data.classes[className].students.includes(validName)) {
+                    data.classes[className].students.push(validName);
+                    added++;
+                } else {
+                    skipped++;
+                }
+            } else {
                 skipped++;
             }
         });
@@ -252,6 +267,75 @@ const Storage = {
     getStudents(className) {
         const classData = this.getClass(className);
         return classData ? classData.students : [];
+    },
+
+    /**
+     * Gibt die Einschränkungen ("nie mit...") einer Klasse zurück
+     */
+    getRestrictions(className) {
+        const classData = this.getClass(className);
+        if (!classData) return {};
+        // Ensure restrictions object exists (for backwards compatibility)
+        if (!classData.restrictions) {
+            classData.restrictions = {};
+            this.setData(this.getData());
+        }
+        return classData.restrictions;
+    },
+
+    /**
+     * Setzt Einschränkungen für einen Schüler (bidirektional)
+     */
+    setStudentRestrictions(className, studentName, restrictedNames) {
+        const data = this.getData();
+        if (!data.classes[className]) {
+            return { success: false, message: 'Klasse nicht gefunden' };
+        }
+
+        if (!data.classes[className].restrictions) {
+            data.classes[className].restrictions = {};
+        }
+
+        const restrictions = data.classes[className].restrictions;
+
+        // Set restrictions for the student
+        restrictions[studentName] = restrictedNames;
+
+        // Bidirectional: Add reciprocal restrictions
+        const allStudents = data.classes[className].students;
+        allStudents.forEach(otherStudent => {
+            if (otherStudent === studentName) return;
+
+            if (!restrictions[otherStudent]) {
+                restrictions[otherStudent] = [];
+            }
+
+            const shouldHaveRestriction = restrictedNames.includes(otherStudent);
+            const hasRestriction = restrictions[otherStudent].includes(studentName);
+
+            if (shouldHaveRestriction && !hasRestriction) {
+                restrictions[otherStudent].push(studentName);
+            } else if (!shouldHaveRestriction && hasRestriction) {
+                restrictions[otherStudent] = restrictions[otherStudent].filter(name => name !== studentName);
+            }
+        });
+
+        this.setData(data);
+        return { success: true, message: 'Einschränkungen gespeichert' };
+    },
+
+    /**
+     * Validiert Schülernamen (max. 12 Zeichen)
+     */
+    validateStudentName(name) {
+        const trimmed = name.trim();
+        if (!trimmed) {
+            return { valid: false, message: 'Name darf nicht leer sein' };
+        }
+        if (trimmed.length > 12) {
+            return { valid: false, message: 'Name darf maximal 12 Zeichen haben' };
+        }
+        return { valid: true, name: trimmed };
     }
 };
 

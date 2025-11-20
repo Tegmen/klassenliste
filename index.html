@@ -58,14 +58,14 @@
 
                     <!-- Einzelner Schüler -->
                     <div class="input-group">
-                        <input type="text" id="singleStudentInput" placeholder="Name des Schülers" class="text-input">
+                        <input type="text" id="singleStudentInput" placeholder="Name (max. 12 Zeichen)" maxlength="12" class="text-input">
                         <button id="addSingleStudentBtn" class="btn btn-primary">+ Hinzufügen</button>
                     </div>
 
                     <!-- Mehrere Schüler -->
                     <div class="multi-input-group">
-                        <label for="multiStudentInput">Mehrere Schüler (ein Name pro Zeile):</label>
-                        <textarea id="multiStudentInput" rows="5" placeholder="Max Mustermann&#10;Anna Schmidt&#10;Leon Weber" class="textarea-input"></textarea>
+                        <label for="multiStudentInput">Mehrere Schüler (ein Name pro Zeile, max. 12 Zeichen):</label>
+                        <textarea id="multiStudentInput" rows="5" placeholder="Max M&#10;Anna S&#10;Leon W" class="textarea-input"></textarea>
                         <button id="addMultiStudentBtn" class="btn btn-primary">Alle hinzufügen</button>
                     </div>
                 </div>

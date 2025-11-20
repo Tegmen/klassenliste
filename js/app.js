@@ -87,6 +87,15 @@ class KlassenlisteApp {
             if (e.key === 'Enter') this.saveStudent();
         });
 
+        // Restriction Modal
+        document.getElementById('saveRestrictionsBtn').addEventListener('click', () => {
+            this.saveRestrictions();
+        });
+
+        document.getElementById('cancelRestrictionsBtn').addEventListener('click', () => {
+            this.closeRestrictionModal();
+        });
+
         // Listen-Anzeige
         document.getElementById('listClassSelect').addEventListener('change', (e) => {
             this.displayClassList(e.target.value);
@@ -180,6 +189,9 @@ class KlassenlisteApp {
             <li>
                 <span class="student-name">${this.escapeHtml(student)}</span>
                 <div class="student-actions">
+                    <button class="btn btn-secondary btn-small" onclick="app.openRestrictionModal('${this.escapeHtml(student)}')">
+                        Nie mit...
+                    </button>
                     <button class="btn btn-secondary btn-small" onclick="app.openStudentModal('${this.escapeHtml(student)}')">
                         Umbenennen
                     </button>
@@ -374,6 +386,65 @@ class KlassenlisteApp {
             } else {
                 alert(result.message);
             }
+        }
+    }
+
+    /**
+     * Öffnet das Einschränkungs-Modal ("Nie mit...")
+     */
+    openRestrictionModal(studentName) {
+        this.currentStudent = studentName;
+        const modal = document.getElementById('restrictionModal');
+        const nameSpan = document.getElementById('restrictionStudentName');
+        const listDiv = document.getElementById('restrictionList');
+
+        if (!modal || !nameSpan || !listDiv) return;
+
+        nameSpan.textContent = studentName;
+        listDiv.innerHTML = '';
+
+        const students = Storage.getStudents(this.currentClass);
+        const restrictions = Storage.getRestrictions(this.currentClass);
+        const currentRestrictions = restrictions[studentName] || [];
+
+        students.filter(s => s !== studentName).forEach(otherStudent => {
+            const label = document.createElement('label');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = otherStudent;
+            checkbox.checked = currentRestrictions.includes(otherStudent);
+            label.appendChild(checkbox);
+            label.append(` ${otherStudent}`);
+            listDiv.appendChild(label);
+        });
+
+        modal.classList.add('active');
+    }
+
+    /**
+     * Schließt das Einschränkungs-Modal
+     */
+    closeRestrictionModal() {
+        const modal = document.getElementById('restrictionModal');
+        if (modal) modal.classList.remove('active');
+    }
+
+    /**
+     * Speichert die Einschränkungen
+     */
+    saveRestrictions() {
+        const listDiv = document.getElementById('restrictionList');
+        if (!listDiv || !this.currentStudent) return;
+
+        const newRestrictions = Array.from(listDiv.querySelectorAll('input:checked'))
+            .map(cb => cb.value);
+
+        const result = Storage.setStudentRestrictions(this.currentClass, this.currentStudent, newRestrictions);
+
+        if (result.success) {
+            this.closeRestrictionModal();
+        } else {
+            alert(result.message);
         }
     }
 
