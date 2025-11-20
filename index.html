@@ -25,9 +25,10 @@
         <!-- Tab Navigation -->
         <nav class="tabs">
             <button class="tab-btn active" data-tab="klasse">Klasse</button>
-            <button class="tab-btn" data-tab="liste">Liste</button>
+            <button class="tab-btn" data-tab="gruppen">Gruppen</button>
             <button class="tab-btn" data-tab="checkliste">Checkliste</button>
             <button class="tab-btn" data-tab="sitzordnung">Sitzordnung</button>
+            <button class="tab-btn" data-tab="wochner">Wochner</button>
         </nav>
 
         <!-- Tab: Klasse -->
@@ -78,26 +79,60 @@
             </div>
         </div>
 
-        <!-- Tab: Liste -->
-        <div id="liste-tab" class="tab-content">
+        <!-- Tab: Gruppen -->
+        <div id="gruppen-tab" class="tab-content">
             <div class="section">
-                <h2>Liste anzeigen</h2>
+                <h2>Gruppen generieren</h2>
 
-                <!-- Klassen-Auswahl für Liste -->
-                <div class="list-selector">
-                    <label for="listClassSelect">Klasse auswählen:</label>
-                    <select id="listClassSelect" class="select-input">
+                <!-- Klassen-Auswahl -->
+                <div class="form-group">
+                    <label for="groupsClassSelect">Klasse auswählen:</label>
+                    <select id="groupsClassSelect" class="select-input">
                         <option value="">-- Klasse auswählen --</option>
                     </select>
                 </div>
 
-                <!-- Listen-Anzeige -->
-                <div id="listDisplay" style="display: none;">
-                    <h3>Klasse: <span id="listClassName"></span></h3>
-                    <div class="list-container">
-                        <ol id="displayList" class="display-list"></ol>
+                <!-- Gruppen-Generator -->
+                <div id="groupsGenerator" style="display: none;">
+                    <div class="form-group">
+                        <label for="groupMode">Modus:</label>
+                        <select id="groupMode" class="select-input">
+                            <option value="count">Gruppenanzahl</option>
+                            <option value="size">Gruppengrösse</option>
+                        </select>
+                    </div>
+
+                    <!-- Gruppenanzahl-Modus -->
+                    <div id="countMode" class="form-group">
+                        <label for="groupCount">Anzahl Gruppen:</label>
+                        <input type="number" id="groupCount" min="1" class="number-input" value="4">
+                    </div>
+
+                    <!-- Gruppengrösse-Modus -->
+                    <div id="sizeMode" class="form-group" style="display: none;">
+                        <label for="groupSize">Gruppengrösse:</label>
+                        <input type="number" id="groupSize" min="1" class="number-input" value="4">
+
+                        <label for="groupSizeMode" style="margin-top: 1rem;">Wenn nicht möglich:</label>
+                        <select id="groupSizeMode" class="select-input">
+                            <option value="larger">Grössere Gruppen</option>
+                            <option value="smaller">Kleinere Gruppen</option>
+                        </select>
+                    </div>
+
+                    <button id="generateGroupsBtn" class="btn btn-primary">Generieren</button>
+                    <button id="exportGroupsBtn" class="btn btn-primary" style="display: none; margin-left: 0.5rem;">Als PDF exportieren</button>
+
+                    <!-- Gruppen-Anzeige -->
+                    <div id="groupsDisplay" style="display: none; margin-top: 2rem;">
+                        <div id="groupsContainer" class="groups-container"></div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Hidden PDF Render Area -->
+            <div id="groups-pdf-render-area">
+                <div id="groups-pdf-content"></div>
             </div>
         </div>
 
@@ -207,6 +242,42 @@
                 </div>
             </div>
         </div>
+
+        <!-- Tab: Wochner -->
+        <div id="wochner-tab" class="tab-content">
+            <div class="section">
+                <h2>Wochner zuteilen</h2>
+
+                <!-- Klassen-Auswahl -->
+                <div class="form-group">
+                    <label for="wochnerClassSelect">Klasse auswählen:</label>
+                    <select id="wochnerClassSelect" class="select-input">
+                        <option value="">-- Klasse auswählen --</option>
+                    </select>
+                </div>
+
+                <!-- Wochner-Generator -->
+                <div id="wochnerGenerator" style="display: none;">
+                    <div class="form-group">
+                        <label for="wochnerTitle">Titel:</label>
+                        <input type="text" id="wochnerTitle" class="text-input" value="Wochner">
+                    </div>
+
+                    <div class="form-group">
+                        <h3>Wochen auswählen</h3>
+                        <p style="color: #666; font-size: 0.9rem;">Wähle die Wochen aus, für die ein Wochner zugeteilt werden soll:</p>
+                        <div id="weekSelection" class="week-selection"></div>
+                    </div>
+
+                    <button id="generateWochnerBtn" class="btn btn-primary">PDF erstellen</button>
+                </div>
+            </div>
+
+            <!-- Hidden PDF Render Area -->
+            <div id="wochner-pdf-render-area">
+                <div id="wochner-pdf-content"></div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal für Klassenname -->
@@ -261,7 +332,9 @@
     <!-- Scripts -->
     <script src="js/storage.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/groups.js"></script>
     <script src="js/checklist.js"></script>
     <script src="js/seating.js"></script>
+    <script src="js/wochner.js"></script>
 </body>
 </html>

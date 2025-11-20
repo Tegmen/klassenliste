@@ -686,6 +686,102 @@ body {
     background-color: var(--bg-color);
 }
 
+/* Groups Styles */
+.groups-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.group-card {
+    background-color: var(--white);
+    border: 2px solid var(--primary-color);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: var(--shadow);
+}
+
+.group-title-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: none;
+    border-bottom: 2px solid var(--primary-color);
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.group-title-input:focus {
+    outline: none;
+}
+
+.group-members {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.group-members li {
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.group-members li:last-child {
+    border-bottom: none;
+}
+
+/* Groups PDF Render Area */
+#groups-pdf-render-area {
+    position: absolute;
+    left: -9999px;
+    top: auto;
+    width: 800px;
+}
+
+/* Wochner Styles */
+.week-selection {
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    padding: 1rem;
+    border-radius: 6px;
+    background-color: var(--white);
+}
+
+.week-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.week-checkbox {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.week-checkbox:hover {
+    background-color: var(--bg-color);
+}
+
+.week-checkbox input[type="checkbox"] {
+    margin-right: 0.5rem;
+    cursor: pointer;
+}
+
+/* Wochner PDF Render Area */
+#wochner-pdf-render-area {
+    position: absolute;
+    left: -9999px;
+    top: auto;
+    width: 800px;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
     .seating-container {
