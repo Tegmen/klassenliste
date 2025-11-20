@@ -202,43 +202,24 @@
 
                 <!-- Sitzordnung-Generator (nur sichtbar wenn Klasse gewählt) -->
                 <div id="seatingGenerator" style="display: none;">
-                    <div class="seating-container">
-                        <!-- Linke Spalte: Einstellungen und Aktionen -->
-                        <div class="seating-controls">
-                            <div class="form-group">
-                                <label for="seatingTitle">Titel:</label>
-                                <input type="text" id="seatingTitle" class="text-input" value="Sitzordnung">
-                            </div>
-
-                            <div class="form-group">
-                                <label>Gittergröße:</label>
-                                <div class="grid-size-controls">
-                                    <label>Spalten: <input type="number" id="gridCols" min="3" max="15" value="7" class="number-input"></label>
-                                    <label>Zeilen: <input type="number" id="gridRows" min="3" max="15" value="7" class="number-input"></label>
-                                    <button id="applyGridBtn" class="btn btn-secondary">Anwenden</button>
-                                </div>
-                            </div>
-
-                            <div class="seating-actions">
-                                <button id="generateSeatingBtn" class="btn btn-primary">Sitzordnung generieren</button>
-                                <button id="clearSeatingBtn" class="btn btn-secondary">Zurücksetzen</button>
-                                <button id="exportSeatingBtn" class="btn btn-primary">PDF Export</button>
-                            </div>
-
-                            <div id="seatingMessage" class="message-area"></div>
-
-                            <!-- Schülerliste mit Einschränkungen -->
-                            <div class="form-group">
-                                <h3>Schüler</h3>
-                                <ul id="seatingStudentList" class="seating-student-list"></ul>
-                            </div>
-                        </div>
-
-                        <!-- Rechte Spalte: Klassenzimmer-Grid -->
-                        <div class="seating-grid-panel">
-                            <div id="classroomGrid" class="classroom-grid"></div>
-                        </div>
+                    <!-- Einstellungszeile -->
+                    <div class="seating-controls-inline">
+                        <label>Titel: <input type="text" id="seatingTitle" class="text-input-inline" value="Sitzordnung"></label>
+                        <label>Zeilen: <input type="number" id="gridRows" min="3" max="15" value="7" class="number-input"></label>
+                        <label>Spalten: <input type="number" id="gridCols" min="3" max="15" value="7" class="number-input"></label>
+                        <button id="applyGridBtn" class="btn btn-secondary">Anwenden</button>
                     </div>
+
+                    <!-- Grid -->
+                    <div id="classroomGrid" class="classroom-grid"></div>
+
+                    <!-- Aktionen -->
+                    <div class="seating-actions">
+                        <button id="generateSeatingBtn" class="btn btn-primary">Generieren</button>
+                        <button id="exportSeatingBtn" class="btn btn-primary">Als PDF exportieren</button>
+                    </div>
+
+                    <div id="seatingMessage" class="message-area"></div>
                 </div>
             </div>
         </div>

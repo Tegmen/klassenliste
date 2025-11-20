@@ -511,23 +511,31 @@ body {
 }
 
 /* Sitzordnung Styles */
-.seating-container {
-    display: grid;
-    grid-template-columns: 350px 1fr;
-    gap: 2rem;
-    margin-top: 1.5rem;
-}
-
-.seating-controls {
+.seating-controls-inline {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 1rem;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: var(--white);
+    border-radius: 6px;
+    box-shadow: var(--shadow);
 }
 
-.grid-size-controls {
+.seating-controls-inline label {
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: 0.5rem;
+    font-weight: 500;
+}
+
+.text-input-inline {
+    padding: 0.5rem;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 1rem;
+    min-width: 200px;
 }
 
 .number-input {
@@ -585,11 +593,14 @@ body {
 
 .classroom-grid {
     display: grid;
-    gap: 4px;
+    gap: 8px;
+    row-gap: 8px;
     background-color: #fafafa;
     border: 2px solid var(--secondary-color);
-    padding: 4px;
+    padding: 8px;
     min-height: 400px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .grid-cell {
@@ -605,6 +616,7 @@ body {
     word-break: break-word;
     aspect-ratio: 2 / 1;
     background-color: var(--white);
+    min-height: 60px;
 }
 
 .grid-cell:hover {
