@@ -494,6 +494,10 @@ body {
 }
 
 #pdf-content table.empty-list td {
+    height: 20px;
+}
+
+#pdf-content table.empty-list tbody tr:first-child td {
     height: 40px;
 }
 
@@ -635,7 +639,7 @@ body {
     align-items: center;
     line-height: 1.1;
     box-sizing: border-box;
-    font-size: 50px;
+    font-size: 25px;
     transform-origin: center center;
 }
 

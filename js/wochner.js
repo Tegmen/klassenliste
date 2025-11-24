@@ -222,22 +222,35 @@ class WochnerGenerator {
             const maxAttempts = 1000;
 
             while (!assigned && attempts < maxAttempts) {
-                // Get students sorted by assignment count (least assigned first)
-                const sortedStudents = [...students].sort((a, b) => {
-                    const countDiff = studentCounts[a] - studentCounts[b];
-                    if (countDiff !== 0) return countDiff;
-
-                    // If same count, prefer those not recently assigned
-                    const weeksSinceA = lastAssigned[a] ? sortedWeeks.indexOf(week) - sortedWeeks.indexOf(lastAssigned[a]) : 999;
-                    const weeksSinceB = lastAssigned[b] ? sortedWeeks.indexOf(week) - sortedWeeks.indexOf(lastAssigned[b]) : 999;
-                    return weeksSinceB - weeksSinceA;
+                // Group students by assignment count
+                const studentsByCount = {};
+                students.forEach(s => {
+                    const count = studentCounts[s];
+                    if (!studentsByCount[count]) studentsByCount[count] = [];
+                    studentsByCount[count].push(s);
                 });
 
+                // Get counts sorted (least assigned first)
+                const counts = Object.keys(studentsByCount).map(Number).sort((a, b) => a - b);
+
+                // Build candidate list with some randomization
+                const candidates = [];
+                for (const count of counts) {
+                    // Shuffle students within same count group
+                    const studentsInGroup = [...studentsByCount[count]].sort(() => Math.random() - 0.5);
+                    candidates.push(...studentsInGroup);
+                }
+
+                // Try random pairs from candidates (prioritizing those with fewer assignments)
+                // But add randomness by not always taking the first two
+                const numCandidates = Math.min(10, candidates.length);
+                const candidateSubset = candidates.slice(0, numCandidates).sort(() => Math.random() - 0.5);
+
                 // Try to find two compatible students
-                for (let i = 0; i < sortedStudents.length; i++) {
-                    for (let j = i + 1; j < sortedStudents.length; j++) {
-                        const s1 = sortedStudents[i];
-                        const s2 = sortedStudents[j];
+                for (let i = 0; i < candidateSubset.length; i++) {
+                    for (let j = i + 1; j < candidateSubset.length; j++) {
+                        const s1 = candidateSubset[i];
+                        const s2 = candidateSubset[j];
 
                         // Check restrictions
                         const s1Restrictions = restrictions[s1] || [];

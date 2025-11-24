@@ -116,26 +116,36 @@ class GroupsGenerator {
     }
 
     generateByCount(students, count, restrictions) {
-        // Shuffle students
-        const shuffled = [...students].sort(() => Math.random() - 0.5);
+        const totalStudents = students.length;
+        const baseSize = Math.floor(totalStudents / count);
+        const remainder = totalStudents % count;
 
-        // Initialize groups
-        const groups = Array.from({ length: count }, () => []);
+        // Calculate target size for each group
+        // First 'remainder' groups get baseSize+1, rest get baseSize
+        const targetSizes = Array.from({ length: count }, (_, i) =>
+            i < remainder ? baseSize + 1 : baseSize
+        );
 
-        // Try to distribute students
-        const assigned = new Set();
-        const maxAttempts = 1000;
-        let attempts = 0;
+        // Try multiple times with different shuffles
+        const maxGlobalAttempts = 100;
 
-        for (const student of shuffled) {
-            if (assigned.has(student)) continue;
+        for (let globalAttempt = 0; globalAttempt < maxGlobalAttempts; globalAttempt++) {
+            // Shuffle students
+            const shuffled = [...students].sort(() => Math.random() - 0.5);
 
-            let placed = false;
-            attempts = 0;
+            // Initialize groups
+            const groups = Array.from({ length: count }, () => []);
+            const assigned = new Set();
 
-            while (!placed && attempts < maxAttempts) {
-                // Try each group in random order
+            let success = true;
+
+            // Try to place each student
+            for (const student of shuffled) {
+                let placed = false;
+
+                // Try each group in random order, but only if it hasn't reached target size
                 const groupIndices = Array.from({ length: count }, (_, i) => i)
+                    .filter(i => groups[i].length < targetSizes[i])
                     .sort(() => Math.random() - 0.5);
 
                 for (const groupIndex of groupIndices) {
@@ -147,16 +157,19 @@ class GroupsGenerator {
                     }
                 }
 
-                attempts++;
+                if (!placed) {
+                    success = false;
+                    break;
+                }
             }
 
-            if (!placed) {
-                // Couldn't place student - return null
-                return null;
+            if (success) {
+                return groups.filter(g => g.length > 0);
             }
         }
 
-        return groups.filter(g => g.length > 0);
+        // Couldn't find valid distribution
+        return null;
     }
 
     generateBySize(students, targetSize, sizeMode, restrictions) {
