@@ -30,10 +30,10 @@ class GroupsGenerator {
             });
         }
 
-        // Modus-Wechsel
-        const groupMode = document.getElementById('groupMode');
-        if (groupMode) {
-            groupMode.addEventListener('change', () => this.toggleMode());
+        // Gruppenanzahl-Änderung
+        const groupCount = document.getElementById('groupCount');
+        if (groupCount) {
+            groupCount.addEventListener('input', () => this.updateGroupSizeInfo());
         }
 
         // Generieren
@@ -55,22 +55,34 @@ class GroupsGenerator {
 
         if (className && generator) {
             generator.style.display = 'block';
+            this.updateGroupSizeInfo();
         } else if (generator) {
             generator.style.display = 'none';
         }
     }
 
-    toggleMode() {
-        const mode = document.getElementById('groupMode').value;
-        const countMode = document.getElementById('countMode');
-        const sizeMode = document.getElementById('sizeMode');
+    updateGroupSizeInfo() {
+        if (!this.currentClass) return;
 
-        if (mode === 'count') {
-            countMode.style.display = 'block';
-            sizeMode.style.display = 'none';
+        const students = Storage.getStudents(this.currentClass);
+        const count = parseInt(document.getElementById('groupCount').value) || 0;
+        const info = document.getElementById('groupSizeInfo');
+
+        if (!info || count < 1) {
+            if (info) info.textContent = '';
+            return;
+        }
+
+        const totalStudents = students.length;
+        const baseSize = Math.floor(totalStudents / count);
+        const remainder = totalStudents % count;
+
+        if (remainder === 0) {
+            info.textContent = `${count}x ${baseSize}er-Gruppe`;
         } else {
-            countMode.style.display = 'none';
-            sizeMode.style.display = 'block';
+            const largerGroups = remainder;
+            const smallerGroups = count - remainder;
+            info.textContent = `${largerGroups}x ${baseSize + 1}er-Gruppe, ${smallerGroups}x ${baseSize}er-Gruppe`;
         }
     }
 
@@ -88,24 +100,13 @@ class GroupsGenerator {
             return;
         }
 
-        const mode = document.getElementById('groupMode').value;
-
-        if (mode === 'count') {
-            const count = parseInt(document.getElementById('groupCount').value);
-            if (!count || count < 1) {
-                alert('Bitte gib eine gültige Gruppenanzahl ein');
-                return;
-            }
-            this.groups = this.generateByCount(students, count, restrictions);
-        } else {
-            const size = parseInt(document.getElementById('groupSize').value);
-            if (!size || size < 1) {
-                alert('Bitte gib eine gültige Gruppengrösse ein');
-                return;
-            }
-            const sizeMode = document.getElementById('groupSizeMode').value;
-            this.groups = this.generateBySize(students, size, sizeMode, restrictions);
+        const count = parseInt(document.getElementById('groupCount').value);
+        if (!count || count < 1) {
+            alert('Bitte gib eine gültige Gruppenanzahl ein');
+            return;
         }
+
+        this.groups = this.generateByCount(students, count, restrictions);
 
         if (this.groups) {
             this.displayGroups();

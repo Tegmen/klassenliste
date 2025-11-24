@@ -15,10 +15,20 @@ class KlassenlisteApp {
      * Initialisiert die Anwendung
      */
     init() {
-        this.setupEventListeners();
-        this.loadClassSelectors();
-        this.registerServiceWorker();
-        this.setupPWAInstall();
+        // Wait for DOM if not ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.setupEventListeners();
+                this.loadClassSelectors();
+                this.registerServiceWorker();
+                this.setupPWAInstall();
+            });
+        } else {
+            this.setupEventListeners();
+            this.loadClassSelectors();
+            this.registerServiceWorker();
+            this.setupPWAInstall();
+        }
     }
 
     /**
@@ -88,18 +98,19 @@ class KlassenlisteApp {
         });
 
         // Restriction Modal
-        document.getElementById('saveRestrictionsBtn').addEventListener('click', () => {
-            this.saveRestrictions();
-        });
+        const saveRestrictionsBtn = document.getElementById('saveRestrictionsBtn');
+        if (saveRestrictionsBtn) {
+            saveRestrictionsBtn.addEventListener('click', () => {
+                this.saveRestrictions();
+            });
+        }
 
-        document.getElementById('cancelRestrictionsBtn').addEventListener('click', () => {
-            this.closeRestrictionModal();
-        });
-
-        // Listen-Anzeige
-        document.getElementById('listClassSelect').addEventListener('change', (e) => {
-            this.displayClassList(e.target.value);
-        });
+        const cancelRestrictionsBtn = document.getElementById('cancelRestrictionsBtn');
+        if (cancelRestrictionsBtn) {
+            cancelRestrictionsBtn.addEventListener('click', () => {
+                this.closeRestrictionModal();
+            });
+        }
     }
 
     /**
@@ -524,5 +535,14 @@ class KlassenlisteApp {
     }
 }
 
-// App initialisieren
-const app = new KlassenlisteApp();
+// App initialisieren und global verfügbar machen
+let app;
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        app = new KlassenlisteApp();
+        window.app = app; // Global verfügbar machen für onclick Handler
+    });
+} else {
+    app = new KlassenlisteApp();
+    window.app = app; // Global verfügbar machen für onclick Handler
+}

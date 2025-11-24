@@ -493,6 +493,10 @@ body {
     height: 60px;
 }
 
+#pdf-content table.empty-list td {
+    height: 40px;
+}
+
 #pdf-content thead th:first-child {
     background-color: #fff;
     border: none;

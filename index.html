@@ -95,29 +95,9 @@
                 <!-- Gruppen-Generator -->
                 <div id="groupsGenerator" style="display: none;">
                     <div class="form-group">
-                        <label for="groupMode">Modus:</label>
-                        <select id="groupMode" class="select-input">
-                            <option value="count">Gruppenanzahl</option>
-                            <option value="size">Gruppengrösse</option>
-                        </select>
-                    </div>
-
-                    <!-- Gruppenanzahl-Modus -->
-                    <div id="countMode" class="form-group">
                         <label for="groupCount">Anzahl Gruppen:</label>
-                        <input type="number" id="groupCount" min="1" class="number-input" value="4">
-                    </div>
-
-                    <!-- Gruppengrösse-Modus -->
-                    <div id="sizeMode" class="form-group" style="display: none;">
-                        <label for="groupSize">Gruppengrösse:</label>
-                        <input type="number" id="groupSize" min="1" class="number-input" value="4">
-
-                        <label for="groupSizeMode" style="margin-top: 1rem;">Wenn nicht möglich:</label>
-                        <select id="groupSizeMode" class="select-input">
-                            <option value="larger">Grössere Gruppen</option>
-                            <option value="smaller">Kleinere Gruppen</option>
-                        </select>
+                        <input type="number" id="groupCount" min="1" max="20" class="number-input" value="4">
+                        <div id="groupSizeInfo" style="margin-top: 0.5rem; color: #666; font-style: italic;"></div>
                     </div>
 
                     <button id="generateGroupsBtn" class="btn btn-primary">Generieren</button>
