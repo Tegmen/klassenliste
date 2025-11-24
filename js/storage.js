@@ -336,6 +336,31 @@ const Storage = {
             return { valid: false, message: 'Name darf maximal 12 Zeichen haben' };
         }
         return { valid: true, name: trimmed };
+    },
+
+    /**
+     * Gibt die zuletzt gewählte Klasse zurück
+     */
+    getLastSelectedClass() {
+        try {
+            return localStorage.getItem('klassenliste_last_selected') || null;
+        } catch (error) {
+            console.error('Fehler beim Laden der letzten Auswahl:', error);
+            return null;
+        }
+    },
+
+    /**
+     * Speichert die zuletzt gewählte Klasse
+     */
+    setLastSelectedClass(className) {
+        try {
+            localStorage.setItem('klassenliste_last_selected', className);
+            return true;
+        } catch (error) {
+            console.error('Fehler beim Speichern der letzten Auswahl:', error);
+            return false;
+        }
     }
 };
 

@@ -490,15 +490,11 @@ body {
 }
 
 #pdf-content table.empty-list thead th {
-    height: 60px;
+    height: 40px;
 }
 
 #pdf-content table.empty-list td {
     height: 20px;
-}
-
-#pdf-content table.empty-list tbody tr:first-child td {
-    height: 40px;
 }
 
 #pdf-content thead th:first-child {

@@ -73,6 +73,12 @@ class GroupsGenerator {
             return;
         }
 
+        // Special case: count = 1 means "Reihenfolge"
+        if (count === 1) {
+            info.textContent = 'Reihenfolge';
+            return;
+        }
+
         const totalStudents = students.length;
         const baseSize = Math.floor(totalStudents / count);
         const remainder = totalStudents % count;
@@ -106,12 +112,30 @@ class GroupsGenerator {
             return;
         }
 
+        // Special case: count = 1 means generate random sequence
+        if (count === 1) {
+            this.isSequenceMode = true;
+            // Generate random sequence
+            const shuffled = [...students].sort(() => Math.random() - 0.5);
+            this.groups = [shuffled]; // Store as single group for compatibility
+            this.displayGroups();
+            return;
+        }
+
+        this.isSequenceMode = false;
         this.groups = this.generateByCount(students, count, restrictions);
 
         if (this.groups) {
             this.displayGroups();
         } else {
-            alert('Keine gültige Gruppeneinteilung möglich mit den aktuellen Einschränkungen');
+            // Try without restrictions
+            this.groups = this.generateByCount(students, count, {});
+            if (this.groups) {
+                alert('Gruppeneinteilung erstellt, aber einige "Nie mit..."-Einschränkungen mussten ignoriert werden.');
+                this.displayGroups();
+            } else {
+                alert('Keine Gruppeneinteilung möglich');
+            }
         }
     }
 
@@ -211,6 +235,34 @@ class GroupsGenerator {
 
         container.innerHTML = '';
 
+        // Special display for sequence mode
+        if (this.isSequenceMode && this.groups.length === 1) {
+            const sequence = this.groups[0];
+            const sequenceDiv = document.createElement('div');
+            sequenceDiv.style.columnCount = '2';
+            sequenceDiv.style.columnGap = '40px';
+            sequenceDiv.style.marginTop = '20px';
+
+            const list = document.createElement('ol');
+            list.style.margin = '0';
+            list.style.padding = '0 0 0 25px';
+
+            sequence.forEach(student => {
+                const li = document.createElement('li');
+                li.textContent = student;
+                li.style.marginBottom = '8px';
+                list.appendChild(li);
+            });
+
+            sequenceDiv.appendChild(list);
+            container.appendChild(sequenceDiv);
+
+            display.style.display = 'block';
+            exportBtn.style.display = 'inline-block';
+            return;
+        }
+
+        // Normal group display
         this.groups.forEach((group, index) => {
             const groupDiv = document.createElement('div');
             groupDiv.className = 'group-card';
@@ -248,30 +300,44 @@ class GroupsGenerator {
         try {
             const { jsPDF } = window.jspdf;
 
-            // Collect group titles from inputs
-            const groupTitles = [];
-            document.querySelectorAll('.group-title-input').forEach(input => {
-                groupTitles[parseInt(input.dataset.groupIndex)] = input.value;
-            });
-
-            // Build PDF content
             let contentHTML = '<div style="padding: 20px; font-family: Arial, sans-serif;">';
-            contentHTML += `<h1 style="text-align: center; margin-bottom: 30px;">Gruppen ${this.currentClass}</h1>`;
-            contentHTML += '<div style="column-count: 2; column-gap: 40px;">';
 
-            this.groups.forEach((group, index) => {
-                contentHTML += '<div style="break-inside: avoid; margin-bottom: 20px;">';
-                contentHTML += `<h2 style="font-size: 18px; margin-bottom: 10px; border-bottom: 2px solid #4CAF50;">${this.escapeHtml(groupTitles[index] || `Gruppe ${index + 1}`)}</h2>`;
-                contentHTML += '<ul style="list-style: none; padding-left: 0;">';
+            // Special handling for sequence mode
+            if (this.isSequenceMode && this.groups.length === 1) {
+                const sequence = this.groups[0];
+                contentHTML += `<h1 style="text-align: center; margin-bottom: 30px;">Reihenfolge ${this.currentClass}</h1>`;
+                contentHTML += '<div style="column-count: 2; column-gap: 40px;">';
+                contentHTML += '<ol style="margin: 0; padding-left: 25px;">';
 
-                group.forEach(member => {
-                    contentHTML += `<li style="padding: 5px 0; border-bottom: 1px solid #eee;">${this.escapeHtml(member)}</li>`;
+                sequence.forEach(student => {
+                    contentHTML += `<li style="margin-bottom: 8px;">${this.escapeHtml(student)}</li>`;
                 });
 
-                contentHTML += '</ul></div>';
-            });
+                contentHTML += '</ol></div></div>';
+            } else {
+                // Collect group titles from inputs
+                const groupTitles = [];
+                document.querySelectorAll('.group-title-input').forEach(input => {
+                    groupTitles[parseInt(input.dataset.groupIndex)] = input.value;
+                });
 
-            contentHTML += '</div></div>';
+                contentHTML += `<h1 style="text-align: center; margin-bottom: 30px;">Gruppen ${this.currentClass}</h1>`;
+                contentHTML += '<div style="column-count: 2; column-gap: 40px;">';
+
+                this.groups.forEach((group, index) => {
+                    contentHTML += '<div style="break-inside: avoid; margin-bottom: 20px;">';
+                    contentHTML += `<h2 style="font-size: 18px; margin-bottom: 10px; border-bottom: 2px solid #4CAF50;">${this.escapeHtml(groupTitles[index] || `Gruppe ${index + 1}`)}</h2>`;
+                    contentHTML += '<ul style="list-style: none; padding-left: 0;">';
+
+                    group.forEach(member => {
+                        contentHTML += `<li style="padding: 5px 0; border-bottom: 1px solid #eee;">${this.escapeHtml(member)}</li>`;
+                    });
+
+                    contentHTML += '</ul></div>';
+                });
+
+                contentHTML += '</div></div>';
+            }
 
             // Render to hidden area
             const renderArea = document.getElementById('groups-pdf-content');

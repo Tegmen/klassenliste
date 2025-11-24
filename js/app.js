@@ -149,6 +149,36 @@ class KlassenlisteApp {
                 selector.add(new Option(className, className));
             });
         });
+
+        // Set last selected class if available
+        const lastSelected = Storage.getLastSelectedClass();
+        const classNames = Object.keys(classes);
+
+        if (lastSelected && classes[lastSelected]) {
+            // Set in all dropdowns
+            selectors.forEach(selector => {
+                if (selector) {
+                    selector.value = lastSelected;
+                }
+            });
+            // Select the class in Klasse tab
+            if (selectors[0] && selectors[0].id === 'classSelect') {
+                this.selectClass(lastSelected);
+            }
+        } else if (classNames.length > 0) {
+            // If no last selected or it doesn't exist, select first class
+            const firstClass = classNames.sort()[0];
+            selectors.forEach(selector => {
+                if (selector) {
+                    selector.value = firstClass;
+                }
+            });
+            // Select the class in Klasse tab
+            if (selectors[0] && selectors[0].id === 'classSelect') {
+                this.selectClass(firstClass);
+            }
+            Storage.setLastSelectedClass(firstClass);
+        }
     }
 
     /**
@@ -156,6 +186,11 @@ class KlassenlisteApp {
      */
     selectClass(className) {
         this.currentClass = className;
+
+        // Save last selected class
+        if (className) {
+            Storage.setLastSelectedClass(className);
+        }
 
         const studentSection = document.getElementById('studentSection');
         const renameBtn = document.getElementById('renameClassBtn');
